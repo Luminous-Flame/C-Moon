@@ -67,7 +67,7 @@
         python3 {{ playbook_dir }}/copy_rack_temp.py
         "{{ service_account_key_file }}"
         "1wyW8e7xhbgZMOvG28k6jqE4YHWgWsS9v2Hmd0xPkONA"
-        "C-Moon-Rack"
+        "{{ rack_sheet_name }}"
         "{{ drive_folder_id }}"
       register: drive_copy_result
 

@@ -1,2 +1,3 @@
 service_account_key_file: "{{ playbook_dir }}/../auth/account-key.json"
 drive_folder_id: "업로드 하려는 구글 드라이브 디렉토리 ID"
+rack_sheet_name: "Rack 시트 이름"
