@@ -1,0 +1,29 @@
+---
+- name: Update CMDB docs
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Set current date
+      set_fact:
+        current_date: "{{ lookup('pipe', 'date +%Y%m%d') }}"
+
+    - name:  Set document path
+      set_fact:
+        document_path: "/var/www/html/cmoon/{{ current_date }}/server_list.csv"
+
+    - name: server_list.xlsx already exists
+      stat:
+        path: "{{ document_path }}"
+      register: server_list_stat
+      changed_when: false
+
+    - name: Execute make_cmdb_list.sh script
+      command: "{{ playbook_dir }}/make_cmdb_list.sh"
+      when: not server_list_stat.stat.exists
+
+    - name: Execute cmdb_update.py script
+      command: python3 {{ playbook_dir }}/cmdb_update.py a
+
+    - name: Execute cmdb_clean.py script
+      command: python3 {{ playbook_dir }}/cmdb_clean.py

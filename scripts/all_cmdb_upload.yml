@@ -1,0 +1,52 @@
+---
+- name: Upload document to Google Drive
+  hosts: localhost
+  gather_facts: false
+
+  vars_files:
+    - vars.yaml
+
+  tasks:
+    - name: Set current date
+      set_fact:
+        current_date: "{{ lookup('pipe', 'date +%Y%m%d') }}"
+
+    - name: Set document path
+      set_fact:
+        document_path: "/var/www/html/cmoon/{{ current_date }}/server_list.csv"
+
+    - name: Upload document to Google Drive
+      command: >
+        python3 file_upload.py
+        --service-account-key "{{ service_account_key_file }}"
+        --spreadsheet-path "{{ document_path }}"
+        --drive-folder-id "{{ drive_folder_id }}"
+      register: drive_upload_result
+
+    - name: Get spreadsheet_id from upload result
+      set_fact:
+        spreadsheet_id: "{{ drive_upload_result.stdout }}"
+      when: drive_upload_result.rc == 0
+
+    - name: Add Google Sheets Filter
+      command: >
+        python3 file_filter.py "{{ spreadsheet_id }}"
+      when: drive_upload_result.rc == 0
+
+    - name: Copy spreadsheet file in Google Drive
+      command: >
+        python3 {{ playbook_dir }}/copy_rack_temp.py
+        "{{ service_account_key_file }}"
+        "1wyW8e7xhbgZMOvG28k6jqE4YHWgWsS9v2Hmd0xPkONA"
+        "C-Moon-Rack"
+        "{{ drive_folder_id }}"
+      register: drive_copy_result
+
+    - name: Copy 1st sheet from uploaded file to 2nd sheet of copied file
+      command: >
+        python3 copy_data_sheet.py
+        "{{ spreadsheet_id }}"
+        "{{ drive_copy_result.stdout }}"
+        "{{ service_account_key_file }}"
+      when: drive_copy_result.rc == 0 and spreadsheet_id is defined
+
